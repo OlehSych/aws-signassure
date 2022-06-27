@@ -1,0 +1,7 @@
+{
+  "schemaPath": "schema.gql",
+  "includes": ["*"],
+  "extensions": {
+    "endpoints": {}
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "name": "sign-assure",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Oleh Sych <olehsych@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/OlehSych/aws-signassure.git"
+  },
+  "scripts": {
+    "prebuild": "rimraf ./dist",
+    "build": "nest build",
+    "start": "IS_NOT_SLS=true nest start --watch",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "deploy": "IS_DDB_LOCAL= IS_NOT_SLS= STAGE=dev sls deploy --verbose",
+    "deploy:prod": "IS_DDB_LOCAL= IS_NOT_SLS= STAGE=prod sls deploy --verbose --stage prod",
+    "package": "sls package",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "ddb:start": "docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -inMemory -sharedDb",
+    "ddb:migrate": "sls dynamodb start",
+    "sls:start": "cross-env sls offline start",
+    "sls:online": "cross-env IS_DDB_LOCAL= sls offline",
+    "build:schema": "ts-node ./src/generate-schema.ts",
+    "genres": "ts-node genres.ts -- \"src/**/*.schema.ts\" \"resources/dynamodb.yml\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.109.0",
+    "@aws-sdk/s3-request-presigner": "^3.109.0",
+    "@graphql-tools/merge": "^8.2.3",
+    "@nestjs/apollo": "^10.0.14",
+    "@nestjs/common": "^8.4.7",
+    "@nestjs/config": "^2.1.0",
+    "@nestjs/core": "^8.4.7",
+    "@nestjs/graphql": "^10.0.15",
+    "@nestjs/platform-express": "^8.4.7",
+    "apollo-server-express": "^3.8.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
+    "dynamoose": "^2.8.5",
+    "graphql": "^15.8.0",
+    "graphql-tools": "^8.2.11",
+    "nestjs-dynamoose": "^0.3.4",
+    "node-ses": "^3.0.3",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "3.0.2",
+    "rxjs": "^7.5.5",
+    "type-graphql": "^1.1.1",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.100.0",
+    "@commitlint/cli": "15.0.0",
+    "@commitlint/config-conventional": "15.0.0",
+    "@nestjs/cli": "^8.2.5",
+    "@nestjs/schematics": "8.0.8",
+    "@types/aws-lambda": "8.10.92",
+    "@types/js-yaml": "4.0.5",
+    "@types/node": "16.11.26",
+    "@types/serverless": "1.78.44",
+    "@types/uuid": "8.3.4",
+    "@typescript-eslint/eslint-plugin": "5.13.0",
+    "@typescript-eslint/parser": "5.13.0",
+    "change-case": "4.1.2",
+    "cross-env": "7.0.3",
+    "eslint": "8.10.0",
+    "eslint-config-prettier": "8.4.0",
+    "eslint-plugin-import": "2.25.4",
+    "glob-promise": "4.2.2",
+    "husky": "7.0.4",
+    "js-yaml": "4.1.0",
+    "lint-staged": "12.3.4",
+    "prettier": "2.5.1",
+    "serverless": "^3.17.0",
+    "serverless-appsync-plugin": "^1.13.0",
+    "serverless-cognito-add-custom-attributes": "^0.3.0",
+    "serverless-dotenv-plugin": "^4.0.1",
+    "serverless-dynamodb-local": "0.2.40",
+    "serverless-offline": "8.5.0",
+    "serverless-webpack": "^5.7.1",
+    "ts-loader": "9.2.6",
+    "ts-node": "10.6.0",
+    "tsconfig-paths": "3.12.0",
+    "typescript": "4.6.2",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  }
+}

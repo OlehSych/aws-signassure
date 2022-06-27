@@ -1,0 +1,193 @@
+type Admin {
+  id: ID!
+  fullName: String!
+  phoneNumber: String!
+  email: String!
+}
+
+type Contact @aws_cognito_user_pools {
+  id: ID!
+  name: String!
+  role: String!
+  company: String!
+  phone: String!
+  email: String!
+}
+
+type Company @aws_cognito_user_pools {
+  id: ID!
+  name: String!
+  address: String!
+  phoneNumber: String!
+  logo: String
+  usersCount: Int
+  isActive: Boolean!
+  contacts: [Contact]
+}
+
+type Role @aws_cognito_user_pools {
+  isBoardMember: Boolean!
+  isSigningOfficer: Boolean!
+  isDelegateAuthority: Boolean!
+  isOfficerOfOrganization: Boolean!
+  isAdmin: Boolean!
+}
+
+type User @aws_cognito_user_pools {
+  id: ID!
+  companyId: ID!
+  fullName: String!
+  jobTitle: String!
+  phoneNumber: String!
+  email: String!
+  address: String!
+  signature: String
+  role: Role!
+  isActive: Boolean!
+  onboarding: Boolean!
+  agreement: Boolean!
+}
+
+input CompanyContact {
+  id: ID!
+  name: String!
+  role: String!
+  company: String!
+  phone: String!
+  email: String!
+}
+
+input UserRole {
+  isBoardMember: Boolean!
+  isSigningOfficer: Boolean!
+  isDelegateAuthority: Boolean!
+  isOfficerOfOrganization: Boolean!
+  isAdmin: Boolean!
+}
+
+type Query @aws_cognito_user_pools {
+  admin(id: ID!): Admin
+  companies: [Company!]!
+  company(id: ID!): Company
+  users(companyId: String!): [User!]!
+  usersCount(countUsersInput: CountUsersInput!): Int!
+  user(id: ID!, companyId: ID!): User
+  getUploadUrl(fileInput: FileInput!): String!
+  getFileUrl(fileInput: FileInput!): String!
+}
+
+input CountUsersInput {
+  companyId: ID!
+}
+
+input FileInput {
+  userId: String
+  companyId: String!
+  filename: String!
+}
+
+type Mutation {
+  updateAdmin(updateAdminInput: UpdateAdminInput!): Admin!
+  createCompany(createCompanyInput: CreateCompanyInput!): Company!
+  activateCompany(id: ID!): Company!
+  updateCompany(updateCompanyInput: UpdateCompanyInput!): Company!
+  removeCompany(id: ID!): ID!
+  createCompanyContact(createCompanyContactInput: CreateCompanyContactInput!): Company!
+  updateCompanyContact(updateCompanyContactInput: UpdateCompanyContactInput!): Company!
+  removeCompanyContact(companyId: ID!, contactId: ID!): Company!
+  createUser(createUserInput: CreateUserInput!): User!
+  createUserPassword(createUserPasswordInput: CreateUserPasswordInput!): Boolean!
+  @aws_api_key
+  updateUserPassword(updateUserPasswordInput: UpdateUserPasswordInput!): Boolean!
+  @aws_cognito_user_pools
+  resetUserPassword(id: ID!, companyId: ID!): Boolean!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+  @aws_cognito_user_pools
+  removeUser(id: ID!, companyId: ID!): ID!
+  inviteUser(inviteUserInput: InviteUserInput!): Boolean!
+}
+
+input UpdateAdminInput {
+  id: ID!
+  fullName: String!
+  phoneNumber: String!
+  email: String!
+}
+
+input CreateCompanyInput {
+  name: String!
+  address: String!
+  phoneNumber: String!
+  logo: String
+}
+
+input UpdateCompanyInput {
+  name: String
+  address: String
+  phoneNumber: String
+  logo: String
+  id: ID!
+  isActive: Boolean
+}
+
+input CreateCompanyContactInput {
+  companyId: ID!
+  name: String!
+  role: String!
+  company: String!
+  phone: String!
+  email: String!
+}
+
+input UpdateCompanyContactInput {
+  companyId: ID!
+  name: String!
+  role: String!
+  company: String!
+  phone: String!
+  email: String!
+  id: ID!
+}
+
+input CreateUserInput {
+  companyId: ID!
+  fullName: String!
+  jobTitle: String!
+  phoneNumber: String!
+  email: String!
+  address: String!
+  signature: String
+  role: UserRole!
+}
+
+input CreateUserPasswordInput {
+  id: String!
+  companyId: String!
+  activationKey: String!
+  password: String!
+}
+
+input UpdateUserPasswordInput {
+  id: String!
+  companyId: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  companyId: String!
+  fullName: String
+  jobTitle: String
+  phoneNumber: String
+  email: String
+  address: String
+  signature: String
+  role: UserRole
+  id: ID!
+  onboarding: Boolean
+  agreement: Boolean
+}
+
+input InviteUserInput {
+  id: String!
+  companyId: String!
+}

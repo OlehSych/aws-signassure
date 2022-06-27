@@ -1,0 +1,38 @@
+Resources:
+  CognitoAdminPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      # Generate a name based on the stage
+      UserPoolName: ${self:provider.stage}-admin-pool
+      # Set email as an alias
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: True
+          RequireNumbers: True
+          RequireSymbols: False
+          RequireUppercase: True
+
+  CognitoAdminPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      # Generate an app client name based on the stage
+      ClientName: ${self:provider.stage}-admin-pool-client
+      UserPoolId:
+        Ref: CognitoAdminPool
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+      GenerateSecret: false
+
+Outputs:
+  AdminPoolId:
+    Value:
+      Ref: CognitoAdminPool
+
+  AdminPoolClientId:
+    Value:
+      Ref: CognitoAdminPoolClient

@@ -1,0 +1,434 @@
+service: signassure-be
+package:
+  individually: true
+  excludeDevDependencies: true
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    APP: signassure-${self:provider.stage}
+    COMPANY_TABLE: ${self:provider.stage}-company-table
+    USER_TABLE: ${self:provider.stage}-user-table
+    COGNITO_ADMIN_POOL_ID: { Ref: CognitoAdminPool }
+    COGNITO_USER_POOL_ID: { Ref: CognitoUserPool }
+    S3_BUCKET_ID: { Ref: AttachmentsBucket }
+    S3_URL_EXPIRE_TIME: 3600
+plugins:
+  - serverless-webpack
+  - serverless-dotenv-plugin
+  - serverless-appsync-plugin
+  - serverless-cognito-add-custom-attributes
+  - serverless-dynamodb-local
+  - serverless-offline
+resources:
+  - ${file(resources/cognito-admin-pool.yml)}
+  - ${file(resources/cognito-user-pool.yml)}
+  - ${file(resources/role.yml)}
+  - ${file(resources/s3-bucket.yml)}
+  - ${file(resources/dynamodb.yml)}
+functions:
+  # Company
+  createCompany:
+    name: ${self:custom.handlerNamePrefix}-create-company
+    handler: src/company/handler.createCompany
+    role: GraphqlSignAssure
+    timeout: 30
+  activateCompany:
+    name: ${self:custom.handlerNamePrefix}-activate-company
+    handler: src/company/handler.activateCompany
+    role: GraphqlSignAssure
+    timeout: 30
+  updateCompany:
+    name: ${self:custom.handlerNamePrefix}-update-company
+    handler: src/company/handler.updateCompany
+    role: GraphqlSignAssure
+    timeout: 30
+  removeCompany:
+    name: ${self:custom.handlerNamePrefix}-remove-company
+    handler: src/company/handler.removeCompany
+    role: GraphqlSignAssure
+    timeout: 30
+  getCompanies:
+    name: ${self:custom.handlerNamePrefix}-get-companies
+    handler: src/company/handler.getCompanies
+    role: GraphqlSignAssure
+    timeout: 30
+  getCompany:
+    name: ${self:custom.handlerNamePrefix}-get-company
+    handler: src/company/handler.getCompany
+    role: GraphqlSignAssure
+    timeout: 30
+  createCompanyContact:
+    name: ${self:custom.handlerNamePrefix}-create-company-contact
+    handler: src/company/handler.createCompanyContact
+    role: GraphqlSignAssure
+    timeout: 30
+  updateCompanyContact:
+    name: ${self:custom.handlerNamePrefix}-update-company-contact
+    handler: src/company/handler.updateCompanyContact
+    role: GraphqlSignAssure
+    timeout: 30
+  removeCompanyContact:
+    name: ${self:custom.handlerNamePrefix}-remove-company-contact
+    handler: src/company/handler.removeCompanyContact
+    role: GraphqlSignAssure
+    timeout: 30
+  # Users
+  createUser:
+    name: ${self:custom.handlerNamePrefix}-create-user
+    handler: src/users/handler.createUser
+    role: GraphqlSignAssure
+    timeout: 30
+  createUserPassword:
+    name: ${self:custom.handlerNamePrefix}-create-user-password
+    handler: src/users/handler.createUserPassword
+    role: GraphqlSignAssure
+    timeout: 30
+  updateUser:
+    name: ${self:custom.handlerNamePrefix}-update-user
+    handler: src/users/handler.updateUser
+    role: GraphqlSignAssure
+    timeout: 30
+  updateUserPassword:
+    name: ${self:custom.handlerNamePrefix}-update-user-password
+    handler: src/users/handler.updateUserPassword
+    role: GraphqlSignAssure
+    timeout: 30
+  resetUserPassword:
+    name: ${self:custom.handlerNamePrefix}-reset-user-password
+    handler: src/users/handler.resetUserPassword
+    role: GraphqlSignAssure
+    timeout: 30
+  removeUser:
+    name: ${self:custom.handlerNamePrefix}-remove-user
+    handler: src/users/handler.removeUser
+    role: GraphqlSignAssure
+    timeout: 30
+  inviteUser:
+    name: ${self:custom.handlerNamePrefix}-invite-user
+    handler: src/users/handler.inviteUser
+    role: GraphqlSignAssure
+    timeout: 30
+  getUsers:
+    name: ${self:custom.handlerNamePrefix}-get-users
+    handler: src/users/handler.getUsers
+    role: GraphqlSignAssure
+    timeout: 30
+  getUser:
+    name: ${self:custom.handlerNamePrefix}-get-user
+    handler: src/users/handler.getUser
+    role: GraphqlSignAssure
+    timeout: 30
+  usersCount:
+    name: ${self:custom.handlerNamePrefix}-users-count
+    handler: src/users/handler.usersCount
+    role: GraphqlSignAssure
+    timeout: 30
+  # Files
+  getUploadUrl:
+    name: ${self:custom.handlerNamePrefix}-files-getUploadUrl
+    handler: src/files/handler.getUploadUrl
+    role: GraphqlSignAssure
+    timeout: 30
+  getFileUrl:
+    name: ${self:custom.handlerNamePrefix}-files-getFileUrl
+    handler: src/files/handler.getFileUrl
+    role: GraphqlSignAssure
+    timeout: 30
+  # Admin
+  createAdmin:
+    name: ${self:custom.handlerNamePrefix}-create-admin
+    handler: src/admin/handler.createAdmin
+    role: GraphqlSignAssure
+    timeout: 30
+  getAdmin:
+    name: ${self:custom.handlerNamePrefix}-get-admin
+    handler: src/admin/handler.getAdmin
+    role: GraphqlSignAssure
+    timeout: 30
+  updateAdmin:
+    name: ${self:custom.handlerNamePrefix}-update-admin
+    handler: src/admin/handler.updateAdmin
+    role: GraphqlSignAssure
+    timeout: 30
+custom:
+  webpack:
+    concurrency: 5
+    includeModules:
+      forceExclude:
+        - aws-sdk
+      #forceInclude:
+  #local dynamodb configuration
+  dynamodb:
+    stages:
+      - ${self:provider.stage}
+    start:
+      docker: true
+      port: 8000
+      inMemory: true
+      sharedDb: true
+      noStart: true
+      migrate: true
+  CognitoAddCustomAttributes:
+    CognitoUserPoolIdOutputKey: "UserPoolId"
+    CognitoUserPoolClientIdOutputKey: "UserPoolClientId"
+    CustomAttributes:
+      - AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "company_id"
+        Required: False
+      - AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "onboarding"
+        Required: False
+      - AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "agreement"
+        Required: False
+  lambdaNamePrefix: ${self:service}-${self:provider.environment.STAGE}
+  handlerNamePrefix: appsync-${self:custom.lambdaNamePrefix}
+  handlerArn: arn:aws:lambda:${self:provider.region}:${env:ACCOUNT_ID_AWS}:function:${self:custom.handlerNamePrefix}
+  appSync:
+    name: ${self:service}-${self:provider.environment.STAGE}
+    authenticationType: AMAZON_COGNITO_USER_POOLS
+    userPoolConfig:
+      awsRegion: ${self:provider.region}
+      defaultAction: ALLOW
+      userPoolId: ${self:provider.environment.COGNITO_ADMIN_POOL_ID}
+    additionalAuthenticationProviders:
+      - authenticationType: AMAZON_COGNITO_USER_POOLS
+        userPoolConfig:
+          awsRegion: ${self:provider.region}
+          userPoolId: ${self:provider.environment.COGNITO_USER_POOL_ID}
+      - authenticationType: API_KEY
+    apiKeys:
+      - name: ${self:service}-${self:provider.environment.STAGE}-api-key
+        expiresAfter: 365d
+    awsRegion: ${self:provider.region}
+    schema: schema.gql
+    serviceRole: GraphqlSignAssure
+    dataSources:
+      # Company
+      - type: AWS_LAMBDA
+        name: createCompany
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-create-company
+      - type: AWS_LAMBDA
+        name: activateCompany
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-activate-company
+      - type: AWS_LAMBDA
+        name: updateCompany
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-update-company
+      - type: AWS_LAMBDA
+        name: removeCompany
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-remove-company
+      - type: AWS_LAMBDA
+        name: getCompanies
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-get-companies
+      - type: AWS_LAMBDA
+        name: getCompany
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-get-company
+      - type: AWS_LAMBDA
+        name: createCompanyContact
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-create-company-contact
+      - type: AWS_LAMBDA
+        name: updateCompanyContact
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-update-company-contact
+      - type: AWS_LAMBDA
+        name: removeCompanyContact
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-remove-company-contact
+      # Users
+      - type: AWS_LAMBDA
+        name: createUser
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-create-user
+      - type: AWS_LAMBDA
+        name: createUserPassword
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-create-user-password
+      - type: AWS_LAMBDA
+        name: updateUser
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-update-user
+      - type: AWS_LAMBDA
+        name: updateUserPassword
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-update-user-password
+      - type: AWS_LAMBDA
+        name: resetUserPassword
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-reset-user-password
+      - type: AWS_LAMBDA
+        name: removeUser
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-remove-user
+      - type: AWS_LAMBDA
+        name: inviteUser
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-invite-user
+      - type: AWS_LAMBDA
+        name: getUsers
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-get-users
+      - type: AWS_LAMBDA
+        name: getUser
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-get-user
+      - type: AWS_LAMBDA
+        name: usersCount
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-users-count
+      #Files
+      - type: AWS_LAMBDA
+        name: getUploadUrl
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-files-getUploadUrl
+      - type: AWS_LAMBDA
+        name: getFileUrl
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-files-getFileUrl
+      # Admin
+      - type: AWS_LAMBDA
+        name: getAdmin
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-get-admin
+      - type: AWS_LAMBDA
+        name: updateAdmin
+        config:
+          lambdaFunctionArn: ${self:custom.handlerArn}-update-admin
+    mappingTemplates:
+      # Company
+      - dataSource: createCompany
+        type: Mutation
+        field: createCompany
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: activateCompany
+        type: Mutation
+        field: activateCompany
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: updateCompany
+        type: Mutation
+        field: updateCompany
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: removeCompany
+        type: Mutation
+        field: removeCompany
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: getCompanies
+        type: Query
+        field: companies
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: getCompany
+        type: Query
+        field: company
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: createCompanyContact
+        type: Mutation
+        field: createCompanyContact
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: updateCompanyContact
+        type: Mutation
+        field: updateCompanyContact
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: removeCompanyContact
+        type: Mutation
+        field: removeCompanyContact
+        request: base/request.vtl
+        response: base/response.vtl
+      # Users
+      - dataSource: createUser
+        type: Mutation
+        field: createUser
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: createUserPassword
+        type: Mutation
+        field: createUserPassword
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: updateUser
+        type: Mutation
+        field: updateUser
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: updateUserPassword
+        type: Mutation
+        field: updateUserPassword
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: resetUserPassword
+        type: Mutation
+        field: resetUserPassword
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: removeUser
+        type: Mutation
+        field: removeUser
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: inviteUser
+        type: Mutation
+        field: inviteUser
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: getUsers
+        type: Query
+        field: users
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: getUser
+        type: Query
+        field: user
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: usersCount
+        type: Query
+        field: usersCount
+        request: base/request.vtl
+        response: base/response.vtl
+      # Files
+      - dataSource: getUploadUrl
+        type: Query
+        field: getUploadUrl
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: getFileUrl
+        type: Query
+        field: getFileUrl
+        request: base/request.vtl
+        response: base/response.vtl
+      # Admin
+      - dataSource: getAdmin
+        type: Query
+        field: admin
+        request: base/request.vtl
+        response: base/response.vtl
+      - dataSource: updateAdmin
+        type: Mutation
+        field: updateAdmin
+        request: base/request.vtl
+        response: base/response.vtl
